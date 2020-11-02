@@ -1,4 +1,4 @@
-# Tweet Processing Tool
+# Twitter JSON Processing Tool
 ## Installation
 ```
 git clone https://github.com/crowdbreaks/twiprocess.git
