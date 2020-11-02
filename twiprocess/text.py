@@ -19,9 +19,16 @@ logger = logging.getLogger(__name__)
 try:
     import spacy
 except ImportError:
-    logger.warning("Could not import 'spacy'. 'tokenize' won't work.")
+    logger.warning(
+        "Could not import 'spacy'. "
+        "'twiprocess.text.tokenize' will not work.")
 
-nlp = spacy.load('en_core_web_sm')
+try:
+    nlp = spacy.load('en_core_web_sm')
+except OSError:
+    logger.warning(
+        "Could not import 'en_core_web_sm'. "
+        "'twiprocess.text.tokenize' will not work.")
 
 
 def separate_hashtags(text):

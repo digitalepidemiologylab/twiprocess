@@ -14,9 +14,16 @@ logger = logging.getLogger(__name__)
 try:
     import spacy
 except ImportError:
-    logger.warning("Could not import 'spacy'. 'get_token_count' won't work.")
+    logger.warning(
+        "Could not import 'spacy', "
+        "'twiprocess.tweets.get_token_count' will not work.")
 
-nlp = spacy.load('en_core_web_sm')
+try:
+    nlp = spacy.load('en_core_web_sm')
+except OSError:
+    logger.warning(
+        "Could not import 'en_core_web_sm', "
+        "'twiprocess.tweets.get_token_count' will not work.")
 
 
 class ProcessTweet(Tweet):
@@ -176,7 +183,7 @@ class ProcessTweet(Tweet):
 
     def get_user_mentions_ids(self):
         # TODO: Parse user mentions in case of no mentions on Twitter's side?
-        # TODO: Originally, doesn't handle retweets
+        # TODO: Originally, didn't handle retweets
         # Edited invalid status['extended_tweet']['entities']['user_mentions']
         # to status['entities']['user_mentions']
         user_mentions = [
@@ -214,6 +221,9 @@ class ProcessTweet(Tweet):
         ``screen_name`` for user mentions are checked for matches."
         https://developer.twitter.com/en/docs/tweets/filter-realtime/guides/basic-stream-parameters.html
         """
+        # TODO: What's the point of the boolean contains_keywords
+        # given that we match keywords before storing on S3?
+        # Wasn't it the case before? Should we keep it for legacy?
         # TODO: We're not fetching display_url, should we?
         if self.keywords == []:
             # TODO: Ask Martin
@@ -221,11 +231,11 @@ class ProcessTweet(Tweet):
 
         relevant_text = ''
         relevant_text += self.text
-        relevant_text += self._get_user_mentions_text()
+        relevant_text += self._fetch_user_mentions_text()
         relevant_text = relevant_text.lower()
 
         relevant_urls = ''
-        relevant_urls += self._get_urls_text()
+        relevant_urls += self._fetch_urls_text()
         relevant_urls = relevant_urls.lower()
 
         for keyword in self.keywords:
@@ -257,7 +267,7 @@ class ProcessTweet(Tweet):
 
     # Private methods
 
-    def _get_urls_text(self):
+    def _fetch_urls_text(self):
         tweet = self.retweet_or_tweet
         # https://developer.twitter.com/en/docs/twitter-api/v1/enrichments/overview/expanded-and-enhanced-urls
         urls_unwound = [
@@ -268,7 +278,7 @@ class ProcessTweet(Tweet):
             for medium in tweet.extended_tweet.media]
         return ' '.join(urls_unwound + urls_expanded + urls_media)
 
-    def _get_user_mentions_text(self):
+    def _fetch_user_mentions_text(self):
         user_mentions_names = [
             mention['name']
             for mention in self.retweet_or_tweet.user_mentions]
