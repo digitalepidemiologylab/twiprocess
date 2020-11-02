@@ -30,6 +30,9 @@ class ProcessTweet(Tweet):
     """Wrapper class for processing functions."""
 
     def extract(self):
+        # TODO: Make geo_obj optional
+        # TODO: Drop token_count
+        # TODO: extract from a list of properties
         geo_obj = self.get_geo_info()
         return {
             'id': self.id,
@@ -68,7 +71,7 @@ class ProcessTweet(Tweet):
     def get_geo_info(self):
         """
         Tries to infer different types of geoenrichment from tweet
-        (PreprocessTweet object).
+        (ProcessTweet object).
         Returns:
             geo_obj (dict): A dictionary with the following keys:
                 - longitude (float)
@@ -154,6 +157,7 @@ class ProcessTweet(Tweet):
             geo_obj['country_code'] = country_code
             geo_obj['geo_type'] = 2
         else:
+            # TODO: OPTIONAL, if geo_code or map_data == None, don't go there
             # Try to parse user location
             locations = self.geo_code.decode(self.user.location)
             # Why len() > 0? -> Because that's the output of self.geo_code
@@ -224,9 +228,11 @@ class ProcessTweet(Tweet):
         # TODO: What's the point of the boolean contains_keywords
         # given that we match keywords before storing on S3?
         # Wasn't it the case before? Should we keep it for legacy?
+        # There were once 2 languages in a single project
         # TODO: We're not fetching display_url, should we?
         if self.keywords == []:
             # TODO: Ask Martin
+            # Nan in a boolean column is not good for pandas
             return None  # Was False
 
         relevant_text = ''
@@ -263,6 +269,7 @@ class ProcessTweet(Tweet):
 
     def get_text_hash(self):
         # TODO: Whatfor?
+        # Drop cleaned duplicates, not needed anymore
         return hashlib.md5(self.text.encode('utf-8')).hexdigest()
 
     # Private methods

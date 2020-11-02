@@ -78,8 +78,8 @@ class Tweet:
             self,
             status,
             keywords=None,  # Legacy
-            map_data=None,  # localeocode
-            geo_code=None   # localeocode
+            map_data=None,  # localgeocode
+            geo_code=None   # localgeocode
     ):
         self._status = status if status else {}
         self.keywords = keywords if keywords else []
@@ -94,7 +94,7 @@ class Tweet:
     # Created at
     @property
     def created_at(self):
-        return self._status['created_at']
+        return self._status.get('created_at')
 
     # User
     @property
