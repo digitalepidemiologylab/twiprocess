@@ -6,8 +6,8 @@ from collections import defaultdict
 from pandas import to_datetime
 import shapely.geometry
 
-from tweet import Tweet
-from text import anonymize_text
+from .tweet import Tweet
+from .text import anonymize_text
 
 logger = logging.getLogger(__name__)
 
