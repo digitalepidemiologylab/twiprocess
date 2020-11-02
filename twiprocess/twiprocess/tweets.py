@@ -5,17 +5,22 @@ from collections import defaultdict
 
 from pandas import to_datetime
 import shapely.geometry
-import spacy
 
 from tweet import Tweet
-from preprocess import anonymize_text
+from text import anonymize_text
 
 logger = logging.getLogger(__name__)
+
+try:
+    import spacy
+except ImportError:
+    logger.warning("Could not import 'spacy'. 'get_token_count' won't work.")
+
 nlp = spacy.load('en_core_web_sm')
 
 
-class PrerocessTweet(Tweet):
-    """Wrapper class for preprocess functions."""
+class ProcessTweet(Tweet):
+    """Wrapper class for processing functions."""
 
     def extract(self):
         geo_obj = self.get_geo_info()
@@ -81,10 +86,12 @@ class PrerocessTweet(Tweet):
         Micronesia.
         """
         def get_region_by_country_code(country_code):
-            return self.map_data[self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB
+            return self.map_data[
+                self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB
 
         def get_subregion_by_country_code(country_code):
-            return self.map_data[self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION
+            return self.map_data[
+                self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION
 
         def get_country_code_by_coords(longitude, latitude):
             coordinates = shapely.geometry.point.Point(longitude, latitude)
@@ -95,7 +102,10 @@ class PrerocessTweet(Tweet):
                 dist = self.map_data.geometry.apply(
                     lambda poly: poly.distance(coordinates))
                 closest_country = self.map_data.iloc[dist.argmin()].ISO_A2
-                logger.warning(f'Coordinates {longitude}, {latitude} were outside of a country land area but were matched to closest country ({closest_country})')
+                logger.warning(
+                    f'Coordinates {longitude}, {latitude} were outside of '
+                    'a country land area but were matched to '
+                    f'closest country ({closest_country})')
                 return closest_country
 
         def convert_to_polygon(s):
@@ -266,15 +276,3 @@ class PrerocessTweet(Tweet):
             mention['screen_name']
             for mention in self.retweet_or_tweet.user_mentions]
         return ' '.join(user_mentions_names + user_mentions_screen_names)
-
-    def _extract_subfield(self, field):
-        # TODO: Whatfor?
-        subf = field.split('.')
-        if subf[-1] in ['id', 'in_reply_to_status_id']:
-            subf[-1] += '_str'
-        if len(subf) == 2:
-            return self.tweet[subf[0]][subf[1]]
-        elif len(subf) == 3:
-            return self.tweet[subf[0]][subf[1]][subf[2]]
-        else:
-            raise Exception('Number of subfields is too deep')

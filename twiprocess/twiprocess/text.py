@@ -1,5 +1,5 @@
 """
-Preprocessing helpers
+Text processing helpers
 =====================
 
 For Unicode categories, go to
@@ -12,12 +12,16 @@ import html
 import unicodedata
 
 import unidecode
-# import en_core_web_sm
 import emoji
 
-
-# nlp = en_core_web_sm.load()
 logger = logging.getLogger(__name__)
+
+try:
+    import spacy
+except ImportError:
+    logger.warning("Could not import 'spacy'. 'tokenize' won't work.")
+
+nlp = spacy.load('en_core_web_sm')
 
 
 def separate_hashtags(text):
@@ -33,22 +37,13 @@ def standardize_text(text):
     # Escape HTML symbols
     text = html.unescape(text)
     # Replace control characters by a whitespace
-    text = _remove_control_characters(text)
+    text = remove_control_characters(text)
     # Normalize by compatibility
-    text = _normalize(text)
+    text = normalize(text)
     return text
 
 
-# def standardize_text(text):
-#     text = html.unescape(text)
-#     # Replace control characters by a whitespace
-#     text = _remove_control_characters(text)
-#     # Normalize by compatibility
-#     text = _normalize(text)
-#     return text
-
-
-def _replace_mentions(text, filler='@user'):
+def replace_mentions(text, filler='@user'):
     """Replaces Twitter @mentions in text with `f' {filler}'`.
     Potentially induces duplicate whitespaces.
     """
@@ -60,7 +55,7 @@ def _replace_mentions(text, filler='@user'):
     return text
 
 
-def _replace_urls(text, filler='<url>'):
+def replace_urls(text, filler='<url>'):
     """Replaces URLs in text with `f' {filler}'`.
     Potentially induces duplicate whitespaces.
     Includes punctuation in websites
@@ -76,7 +71,7 @@ def _replace_urls(text, filler='<url>'):
     return text
 
 
-def _replace_emails(text, filler='@email'):
+def replace_emails(text, filler='@email'):
     """Replaces emails in text with `f' {filler}'`.
     Potentially induces duplicate whitespaces.
     """
@@ -93,16 +88,16 @@ def anonymize_text(text, url_filler='<url>',
     """Replaces URLs, mentions and emails in text with `f' {filler}'`.
     Potentially induces duplicate whitespaces.
     """
-    text = _replace_urls(text, filler=url_filler)
-    text = _replace_mentions(text, filler=user_filler)
-    text = _replace_emails(text, filler=email_filler)
+    text = replace_urls(text, filler=url_filler)
+    text = replace_mentions(text, filler=user_filler)
+    text = replace_emails(text, filler=email_filler)
     return text
 
 
 ###############################################################################
 
 
-def _remove_control_characters(text):
+def remove_control_characters(text):
     """Removes control (C*) Unicode characters."""
     if not isinstance(text, str):
         return text
@@ -111,20 +106,20 @@ def _remove_control_characters(text):
     return ''.join(ch for ch in text if unicodedata.category(ch)[0] != 'C')
 
 
-def _asciify(text):
+def asciify(text):
     """Asciify all unicode characters."""
     text = unidecode.unidecode(text)
     return text
 
 
-def _standardize_punctuation(text):
+def standardize_punctuation(text):
     text = ''.join(
         unidecode.unidecode(c)
         if unicodedata.category(c)[0] == 'P' else c for c in text)
     return text
 
 
-def _remove_punctuation(text):
+def remove_punctuation(text):
     """Replaces all Unicode punctuation except dashes (Pd) with whitespaces.
     Potentially induces duplicate whitespaces.
     """
@@ -136,39 +131,41 @@ def _remove_punctuation(text):
     return text
 
 
-def _normalize(text):
+def normalize(text):
     """Normalizes unicode strings by compatibilty (in composed form)."""
     return unicodedata.normalize('NFKC', text)
 
 
-def _remove_emoji(text):
-    """Replaces symbols-other (So) Unicode characters with whitespaces."""
-    # ! potentially induces duplicate whitespaces
+def remove_emoji(text):
+    """Replaces symbols-other (So) Unicode characters with whitespaces.
+    Potentially induces duplicate whitespaces.
+    """
     text = ''.join(' ' if unicodedata.category(c) == 'So' else c for c in text)
     return text
 
 
-def _asciify_emoji(text):
-    """Replaces emoji with their descriptions."""
-    # ! potentially induces duplicate whitespaces
+def asciify_emoji(text):
+    """Replaces emoji with their descriptions.
+    Potentially induces duplicate whitespaces.
+    """
     text = emoji.demojize(text)
     # Pad with whitespace
     text = re.sub(r":(\w+):", r" :\1: ", text)
     return text
 
 
-# def _tokenize(text):
-#     # Create doc
-#     doc = nlp(text, disable=['parser', 'tagger', 'ner'])
-#     # Find hashtag indices and merge again (so the # are not lost)
-#     hashtag_pos = []
-#     for i, t in enumerate(doc[:-1]):
-#         if t.text == '#':
-#             hashtag_pos.append(i)
-#     with doc.retokenize() as retokenizer:
-#         for i in hashtag_pos:
-#             try:
-#                 retokenizer.merge(doc[i:(i+2)])
-#             except ValueError:
-#                 pass
-#     return [i for i in doc]
+def tokenize(text):
+    # Create doc
+    doc = nlp(text, disable=['parser', 'tagger', 'ner'])
+    # Find hashtag indices and merge again (so the # are not lost)
+    hashtag_pos = []
+    for i, t in enumerate(doc[:-1]):
+        if t.text == '#':
+            hashtag_pos.append(i)
+    with doc.retokenize() as retokenizer:
+        for i in hashtag_pos:
+            try:
+                retokenizer.merge(doc[i:(i+2)])
+            except ValueError:
+                pass
+    return [i for i in doc]

@@ -1,19 +1,9 @@
 import logging
-import re
-import html
-import hashlib
-import unicodedata
 from functools import lru_cache
-from collections import defaultdict
 
-import pandas as pd
-import shapely.geometry
-import spacy
-
-from preprocess import standardize_text
+from text import standardize_text
 
 logger = logging.getLogger(__name__)
-nlp = spacy.load('en_core_web_sm')
 
 
 class User:
