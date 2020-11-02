@@ -1,7 +1,6 @@
 import logging
-import re
-import hashlib
 from collections import defaultdict
+from functools import lru_cache
 
 from pandas import to_datetime
 import shapely.geometry
@@ -186,13 +185,12 @@ class ProcessTweet(Tweet):
         return geo_obj
 
     def get_user_mentions_ids(self):
-        # TODO: Parse user mentions in case of no mentions on Twitter's side?
-        # TODO: Originally, didn't handle retweets
-        # Edited invalid status['extended_tweet']['entities']['user_mentions']
-        # to status['entities']['user_mentions']
+        """Doesn't get mentions from ``retweeted_status``es
+        within the original tweet.
+        """
         user_mentions = [
             mention['id_str']
-            for mention in self.retweet_or_tweet.user_mentions]
+            for mention in self.user_mentions]
         if user_mentions == []:
             return None
         return user_mentions
@@ -217,46 +215,6 @@ class ProcessTweet(Tweet):
         media_info['media'] = dict(media_info['media'])
         return media_info
 
-    def contains_keywords(self):
-        """Here we pool all relevant text within the tweet to do the matching.
-        From the Twitter docs:
-        "Specifically, the text attribute of the Tweet, ``expanded_url`` and
-        ``display_url`` for links and media, text for hashtags, and
-        ``screen_name`` for user mentions are checked for matches."
-        https://developer.twitter.com/en/docs/tweets/filter-realtime/guides/basic-stream-parameters.html
-        """
-        # TODO: What's the point of the boolean contains_keywords
-        # given that we match keywords before storing on S3?
-        # Wasn't it the case before? Should we keep it for legacy?
-        # There were once 2 languages in a single project
-        # TODO: We're not fetching display_url, should we?
-        if self.keywords == []:
-            # TODO: Ask Martin
-            # Nan in a boolean column is not good for pandas
-            return None  # Was False
-
-        relevant_text = ''
-        relevant_text += self.text
-        relevant_text += self._fetch_user_mentions_text()
-        relevant_text = relevant_text.lower()
-
-        relevant_urls = ''
-        relevant_urls += self._fetch_urls_text()
-        relevant_urls = relevant_urls.lower()
-
-        for keyword in self.keywords:
-            # Anything inside the text (mentions, hashtags) will be matched
-            match = re.search(r'{}'.format(keyword), relevant_text)
-            if match is not None:
-                return True
-            # Match URLs if surrounded by non-alphabetic characters
-            # TODO: Is it somehow important?
-            match = re.search(
-                r'(\b|\d|_){}(\b|\d|_|cas)'.format(keyword), relevant_urls)
-            if match is not None:
-                return True
-        return False
-
     def get_token_count(self):
         text = self.text
         # Remove user handles and URLs from text
@@ -267,14 +225,8 @@ class ProcessTweet(Tweet):
             token for token in doc if token.is_alpha and not token.is_stop])
         return token_count
 
-    def get_text_hash(self):
-        # TODO: Whatfor?
-        # Drop cleaned duplicates, not needed anymore
-        return hashlib.md5(self.text.encode('utf-8')).hexdigest()
-
-    # Private methods
-
-    def _fetch_urls_text(self):
+    @property
+    def _urls_text(self):
         tweet = self.retweet_or_tweet
         # https://developer.twitter.com/en/docs/twitter-api/v1/enrichments/overview/expanded-and-enhanced-urls
         urls_unwound = [
@@ -285,7 +237,8 @@ class ProcessTweet(Tweet):
             for medium in tweet.extended_tweet.media]
         return ' '.join(urls_unwound + urls_expanded + urls_media)
 
-    def _fetch_user_mentions_text(self):
+    @property
+    def _user_mentions_text(self):
         user_mentions_names = [
             mention['name']
             for mention in self.retweet_or_tweet.user_mentions]
@@ -293,3 +246,33 @@ class ProcessTweet(Tweet):
             mention['screen_name']
             for mention in self.retweet_or_tweet.user_mentions]
         return ' '.join(user_mentions_names + user_mentions_screen_names)
+
+    @property
+    @lru_cache(maxsize=1)
+    def keyword_matching_text(self):
+        """Returns matching keywords for each project."""
+        # Fetch all relevant text
+        text = ''
+        text += self.text
+        text += self._user_mentions_text
+        text += self._urls_text
+        return text.lower()
+
+    def contains_keywords(self):
+        """Emergency function if we need to separate several projects
+        mixed in one folder.
+        Here we pool all relevant text within the tweet to do the matching.
+        From the Twitter docs:
+        "Specifically, the text attribute of the Tweet, ``expanded_url`` and
+        ``display_url`` for links and media, text for hashtags, and
+        ``screen_name`` for user mentions are checked for matches."
+        https://developer.twitter.com/en/docs/tweets/filter-realtime/guides/basic-stream-parameters.html
+        """
+        if self.keywords == []:
+            # None in a boolean column is not good for pandas
+            return False
+
+        for keyword in self.keywords:
+            if keyword in self.keyword_matching_text:
+                return True
+        return False

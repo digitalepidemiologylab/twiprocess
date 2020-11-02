@@ -4,4 +4,3 @@
 *.ipynb_checkpoints*
 *.ipynb
 *__pycache__
-twiprocess/twiprocess/process_tweet_streamer.py
