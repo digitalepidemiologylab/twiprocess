@@ -28,11 +28,9 @@ except OSError:
 class ProcessTweet(Tweet):
     """Wrapper class for processing functions."""
 
-    def extract(self):
-        # TODO: Make geo_obj optional
-        # TODO: Drop token_count
-        # TODO: extract from a list of properties
-        geo_obj = self.get_geo_info()
+    def extract(self, extract_media=False, extract_geo=False):
+        geo_obj = self.geo_info if extract_geo else {}
+        media = self.media_info if extract_media else {}
         return {
             'id': self.id,
             'text': self.text,
@@ -43,7 +41,7 @@ class ProcessTweet(Tweet):
             'retweeted_user_id': self.retweeted_status.user.id,
             'retweeted_status_id': self.retweeted_status.id,
             'created_at': to_datetime(self.created_at).isoformat(),
-            'entities.user_mentions': self.get_user_mentions_ids(),
+            'entities.user_mentions': self.user_mentions_ids,
             'user.id': self.user.id,
             'user.screen_name': self.user.screen_name,
             'user.name': self.user.name,
@@ -56,7 +54,6 @@ class ProcessTweet(Tweet):
             'user.statuses_count': self.user.statuses_count,
             'user.is_verified': self.user.verified,
             'lang': self.lang,
-            'token_count': self.get_token_count(),
             'is_retweet': self.is_retweet,
             'has_quote': self.has_quote,
             'is_reply': self.is_reply,
@@ -64,10 +61,24 @@ class ProcessTweet(Tweet):
                 True
                 if self._status.get('matching_keywords')
                 else self.contains_keywords(),
-            **geo_obj
+            **geo_obj,
+            **media
         }
 
-    def get_geo_info(self):
+    @property
+    def user_mentions_ids(self):
+        """Doesn't get mentions from ``retweeted_status``es
+        within the original tweet.
+        """
+        user_mentions = [
+            mention['id_str']
+            for mention in self.user_mentions]
+        if user_mentions == []:
+            return None
+        return user_mentions
+
+    @property
+    def geo_info(self):
         """
         Tries to infer different types of geoenrichment from tweet
         (ProcessTweet object).
@@ -144,9 +155,9 @@ class ProcessTweet(Tweet):
             # It's not the first two coordinates, it's the bounding box,
             # it's for some reason wrapped into another layer of brackets
             # [[[a, b], [c, d], [e, f], [g, h]]]
-            p = convert_to_polygon(self.place_coordinates[0])
-            geo_obj['longitude'] = p.centroid.x
-            geo_obj['latitude'] = p.centroid.y
+            polygon = convert_to_polygon(self.place_coordinates[0])
+            geo_obj['longitude'] = polygon.centroid.x
+            geo_obj['latitude'] = polygon.centroid.y
             country_code = self.place_country_code
             if country_code and country_code == '':
                 # Sometimes places don't contain country codes,
@@ -156,7 +167,8 @@ class ProcessTweet(Tweet):
             geo_obj['country_code'] = country_code
             geo_obj['geo_type'] = 2
         else:
-            # TODO: OPTIONAL, if geo_code or map_data == None, don't go there
+            if self.geo_code is None:
+                return geo_obj
             # Try to parse user location
             locations = self.geo_code.decode(self.user.location)
             # Why len() > 0? -> Because that's the output of self.geo_code
@@ -164,7 +176,7 @@ class ProcessTweet(Tweet):
                 geo_obj['longitude'] = locations[0]['longitude']
                 geo_obj['latitude'] = locations[0]['latitude']
                 country_code = locations[0]['country_code']
-                if country_code == '':
+                if country_code == '' and self.map_data:
                     # Sometimes country code is missing (e.g. disputed areas),
                     # try to resolve from geodata
                     country_code = get_country_code_by_coords(
@@ -172,7 +184,7 @@ class ProcessTweet(Tweet):
                 geo_obj['country_code'] = country_code
                 geo_obj['geo_type'] = 3
 
-        if geo_obj['country_code']:
+        if geo_obj['country_code'] and self.map_data:
             # Retrieve region info
             if geo_obj['country_code'] in self.map_data.ISO_A2.tolist():
                 geo_obj['region'] = get_region_by_country_code(
@@ -184,38 +196,23 @@ class ProcessTweet(Tweet):
                     f'Unknown country_code {geo_obj["country_code"]}')
         return geo_obj
 
-    def get_user_mentions_ids(self):
-        """Doesn't get mentions from ``retweeted_status``es
-        within the original tweet.
-        """
-        user_mentions = [
-            mention['id_str']
-            for mention in self.user_mentions]
-        if user_mentions == []:
-            return None
-        return user_mentions
-
-    def get_media_info(self, tweet_obj=None):
-        # TODO: Whatfor?
-        if tweet_obj is None:
-            tweet_obj = self.tweet
+    @property
+    def media_info(self):
         media_info = {'has_media': False, 'media': {}, 'media_image_urls': []}
-        if self._keys_exist(tweet_obj, 'extended_tweet', 'extended_entities', 'media'):
-            tweet_media = tweet_obj['extended_tweet']['extended_entities']['media']
-        elif self._keys_exist(tweet_obj, 'extended_entities', 'media'):
-            tweet_media = tweet_obj['extended_entities']['media']
-        else:
+        if self.media is None:
             return media_info
         media_info['has_media'] = True
         media_info['media'] = defaultdict(lambda: 0)
-        for m in tweet_media:
-            media_info['media'][m['type']] += 1
-            # for media of type video/animated_gif media_url corresponds to a thumbnail image
-            media_info['media_image_urls'].append(m['media_url'])
+        for medium in self.media:
+            media_info['media'][medium.get('type')] += 1
+            # For media of type video/animated_gif, media_url corresponds to
+            # a thumbnail image
+            media_info['media_image_urls'].append(medium.get('media_url'))
         media_info['media'] = dict(media_info['media'])
         return media_info
 
-    def get_token_count(self):
+    @property
+    def token_count(self):
         text = self.text
         # Remove user handles and URLs from text
         text = anonymize_text(text, '', '', '')

@@ -62,12 +62,15 @@ class ExtendedTweet:
     def __init__(self, status):
         self._status = status if status else {}
 
+    # Text
     @property
     def full_text(self):
         return self._status.get('full_text')
 
+    # Extended entities
     @property
     def media(self):
+        # https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/overview/intro-to-tweet-json
         return self._status.get('extended_entities', {}).get('media', [])
 
 
@@ -111,6 +114,7 @@ class Tweet:
         return standardize_text(self.retweet_or_tweet._status.get('text'))
 
     @property
+    @lru_cache(maxsize=1)
     def retweet_or_tweet(self):
         tweet = self
         if self.retweeted_status:
@@ -125,6 +129,16 @@ class Tweet:
     @property
     def urls(self):
         return self._status.get('entities', {}).get('urls', [])
+
+    # Extended entities
+    @property
+    @lru_cache(maxsize=1)
+    def media(self):
+        # https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/overview/intro-to-tweet-json
+        if self.retweet_or_tweet.extended_tweet.media:
+            return self.retweet_or_tweet.extended_tweet.media
+        return self.retweet_or_tweet._status.get(
+            'extended_entities', {}).get('media', [])
 
     # Extended tweet
     @property
