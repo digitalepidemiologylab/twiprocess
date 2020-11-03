@@ -29,6 +29,9 @@ except OSError:
     logger.warning(
         "Could not import 'en_core_web_sm'. "
         "'twiprocess.text.tokenize' will not work.")
+except NameError:
+    pass
+
 
 
 def separate_hashtags(text):

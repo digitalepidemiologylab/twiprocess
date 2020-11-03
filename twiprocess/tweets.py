@@ -23,6 +23,8 @@ except OSError:
     logger.warning(
         "Could not import 'en_core_web_sm', "
         "'twiprocess.tweets.get_token_count' will not work.")
+except NameError:
+    pass
 
 
 class ProcessTweet(Tweet):
