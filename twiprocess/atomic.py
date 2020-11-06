@@ -10,6 +10,7 @@ import logging
 import re
 import html
 import unicodedata
+import ast
 
 import unidecode
 import emoji
@@ -32,24 +33,59 @@ except OSError:
 except NameError:
     pass
 
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    logger.warning(
+        "Could not import 'BeautifulSoup' from 'bs4'."
+        "'twiprocess.text.parse_html_emoji' will not work.")
 
 
-def separate_hashtags(text):
-    text = re.sub(r"#(\w+)#(\w+)", r" #\1 #\2 ", text)
-    return text
+# Decorators for composite functions
+def check_empty_nonstr(func):
+    def wrapper(text, **kwargs):
+        if not text:
+            return ''
+        if not isinstance(text, str):
+            text = str(text)
+        func(text, **kwargs)
+
+    return wrapper
+
+
+def drop_multiple_spaces(func):
+    def wrapper(text, **kwargs):
+        text = func(text, **kwargs)
+        # Replace multiple spaces with single space
+        return ' '.join(text.split())
+
+    return wrapper
 
 
 def standardize_text(text):
-    if not text:
-        return ''
-    if not isinstance(text, str):
-        text = str(text)
     # Escape HTML symbols
     text = html.unescape(text)
     # Replace control characters by a whitespace
     text = remove_control_characters(text)
     # Normalize by compatibility
     text = normalize(text)
+    return text
+
+
+def parse_html_emoji(text):
+    soup = BeautifulSoup(text, 'html.parser')
+    spans = soup.find_all('span')
+    if len(spans) == 0:
+        return text
+    while soup.span is not None:
+        emoji_bytes = ast.literal_eval(soup.span.attrs['data-emoji-bytes'])
+        emoji_unicode = bytes(emoji_bytes).decode()
+        soup.span.replace_with(emoji_unicode)
+    return soup.text
+
+
+def separate_hashtags(text):
+    text = re.sub(r"#(\w+)#(\w+)", r" #\1 #\2 ", text)
     return text
 
 

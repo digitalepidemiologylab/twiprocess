@@ -1,14 +1,15 @@
 import logging
 from functools import lru_cache
 
-from .text import standardize_text
+from . import standardize
 
 logger = logging.getLogger(__name__)
 
 
 class User:
-    def __init__(self, user):
+    def __init__(self, user, parent):
         self._user = user
+        self.parent = parent
 
     @property
     def id(self):
@@ -28,7 +29,7 @@ class User:
 
     @property
     def description(self):
-        return standardize_text(self._user.get('description'))
+        return self.parent.standardize_func(self._user.get('description'))
 
     @property
     def verified(self):
@@ -59,8 +60,9 @@ class User:
 
 
 class ExtendedTweet:
-    def __init__(self, status):
+    def __init__(self, status, parent):
         self._status = status if status else {}
+        self.parent = parent
 
     # Text
     @property
@@ -80,12 +82,16 @@ class Tweet:
     def __init__(
             self,
             status,
+            standardize_func=None,
             keywords=None,  # Legacy
             map_data=None,  # localgeocode
             geo_code=None   # localgeocode
     ):
         self._status = status if status else {}
         self.keywords = keywords if keywords else []
+        self.standardize_func = \
+            getattr(standardize, standardize_func) if standardize_func \
+            else lambda text: text
         self.map_data = map_data
         self.geo_code = geo_code
 
@@ -102,16 +108,16 @@ class Tweet:
     # User
     @property
     def user(self):
-        return User(self._status.get('user', {}))
+        return User(self._status.get('user', {}), parent=self)
 
     # Text
     @property
     @lru_cache(maxsize=1)
     def text(self):
         if self.retweet_or_tweet.extended_tweet:
-            return standardize_text(
+            return self.standardize_func(
                 self.retweet_or_tweet.extended_tweet.full_text)
-        return standardize_text(self.retweet_or_tweet._status.get('text'))
+        return self.standardize_func(self.retweet_or_tweet._status.get('text'))
 
     @property
     @lru_cache(maxsize=1)
@@ -143,7 +149,7 @@ class Tweet:
     # Extended tweet
     @property
     def extended_tweet(self):
-        return ExtendedTweet(self._status.get('extended_tweet'))
+        return ExtendedTweet(self._status.get('extended_tweet'), parent=self)
 
     # Retweet
     @property

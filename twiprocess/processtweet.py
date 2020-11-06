@@ -6,7 +6,7 @@ from pandas import to_datetime
 import shapely.geometry
 
 from .tweet import Tweet
-from .text import anonymize_text
+from .atomic import anonymize_text
 
 logger = logging.getLogger(__name__)
 
