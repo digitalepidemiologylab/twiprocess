@@ -81,7 +81,8 @@ def preprocess(text,
                replace_user_with=None,
                replace_email_with=None,
                lemmatize=False,
-               remove_stop_words=False):
+               remove_stop_words=False,
+               **kwargs):
     """Preprocesses Twitter data.
 
     Args:

@@ -1,3 +1,48 @@
+"""
+##################
+Base Tweet Classes
+##################
+
+***********
+Usage Notes
+***********
+
+Properties
+==========
+
+Pay attention that properties that return sub-objects
+(e.g. ``Tweet().retweet_or_tweet``, ``Tweet().extended_tweet``,
+``Tweet().user``) do not return ``None`` if empty, but an empty instance of
+the corresponding class (e.g. ``Tweet``, ``ExtendedTweet``, ``User``).
+
+Given this, please don't use these properties to confirm existence of
+a sub-object in ``if`` statements such as
+```
+if tweet.extended_tweet:
+    do sth
+```
+
+Instead, go for
+```
+if tweet.has_extended:
+    do sth
+```
+
+This is done to simplify further attributions on these new objects.
+E.g. you can go ``tweet.retweet_or_tweet.extended_tweet.media``.
+
+The classes below use the ``dict`` ``get()`` method to do that, so to
+not trigger ``TypeError``s in case of ``None`` objects, it was decided
+to return empty sub-objects instead of ``None``.
+
+Comparisons
+===========
+You can compare ``Tweet``, ``ExtendedTweet`` and ``User`` objects.
+``Tweet`` objects can be compared to the child classes objects as long as
+they do not introduce their own attributes (comparison is done on object's
+``__dict__`` attribute).
+"""
+
 import logging
 from functools import lru_cache
 
@@ -10,6 +55,12 @@ class User:
     def __init__(self, user, parent):
         self._user = user
         self.parent = parent
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        return hash(self.__dict__.values())
 
     @property
     def id(self):
@@ -64,6 +115,19 @@ class ExtendedTweet:
         self._status = status if status else {}
         self.parent = parent
 
+    # def __eq__(self, other):
+    #     if not isinstance(other, ExtendedTweet):
+    #         return False
+    #     status_eq = self._status == other._status
+    #     parent_eq = self.parent == other.parent
+    #     return status_eq and parent_eq
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        return hash(self.__dict__.values())
+
     # Text
     @property
     def full_text(self):
@@ -73,7 +137,11 @@ class ExtendedTweet:
     @property
     def media(self):
         # https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/overview/intro-to-tweet-json
-        return self._status.get('extended_entities', {}).get('media', [])
+        return self._status.get('extended_entities', {}).get('media')
+
+
+def standardize_func_default(text):
+    return text
 
 
 class Tweet:
@@ -91,9 +159,27 @@ class Tweet:
         self.keywords = keywords if keywords else []
         self.standardize_func = \
             getattr(standardize, standardize_func) if standardize_func \
-            else lambda text: text
+            else standardize_func_default
         self.map_data = map_data
         self.geo_code = geo_code
+
+    # def __eq__(self, other):
+    #     if not isinstance(other, Tweet) or not issubclass(type(other), Tweet):
+    #         return False
+    #     status_eq = self._status == other._status
+    #     keywords_eq = self.keywords == other.keywords
+    #     standardize_eq = self.standardize_func == other.standardize_func
+    #     map_data_eq = self.map_data == other.map_data
+    #     geo_code_eq = self.geo_code == other.geo_code
+    #     return (
+    #         status_eq and keywords_eq and standardize_eq
+    #         and map_data_eq and geo_code_eq)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        return hash(self.__dict__.values())
 
     # ID
     @property
@@ -114,7 +200,8 @@ class Tweet:
     @property
     @lru_cache(maxsize=1)
     def text(self):
-        if self.retweet_or_tweet.extended_tweet:
+        if self.retweet_or_tweet.extended_tweet != \
+                ExtendedTweet(None, self):
             return self.standardize_func(
                 self.retweet_or_tweet.extended_tweet.full_text)
         return self.standardize_func(self.retweet_or_tweet._status.get('text'))
@@ -123,7 +210,7 @@ class Tweet:
     @lru_cache(maxsize=1)
     def retweet_or_tweet(self):
         tweet = self
-        if self.retweeted_status:
+        if self.is_retweet:
             tweet = self.retweeted_status
         return tweet
 
@@ -144,12 +231,17 @@ class Tweet:
         if self.retweet_or_tweet.extended_tweet.media:
             return self.retweet_or_tweet.extended_tweet.media
         return self.retweet_or_tweet._status.get(
-            'extended_entities', {}).get('media', [])
+            'extended_entities', {}).get('media')
 
     # Extended tweet
     @property
+    def has_extended(self):
+        return 'extended_tweet' in self._status
+
+    @property
     def extended_tweet(self):
-        return ExtendedTweet(self._status.get('extended_tweet'), parent=self)
+        return ExtendedTweet(
+            self._status.get('extended_tweet'), parent=self)
 
     # Retweet
     @property
@@ -159,7 +251,7 @@ class Tweet:
 
     @property
     def retweeted_status(self):
-        return Tweet(self._status.get('retweeted_status'))
+        return type(self)(self._status.get('retweeted_status'))
 
     # Quote
     @property
@@ -169,7 +261,7 @@ class Tweet:
 
     @property
     def quoted_status(self):
-        return Tweet(self._status.get('quoted_status'))
+        return type(self)(self._status.get('quoted_status'))
 
     # Reply
     @property

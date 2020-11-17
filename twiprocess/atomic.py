@@ -1,6 +1,7 @@
 """
-Text processing helpers
-=====================
+##############################
+Atomic Preprocessing Functions
+##############################
 
 For Unicode categories, go to
 https://en.wikipedia.org/wiki/Unicode_character_property.
@@ -14,6 +15,9 @@ import ast
 
 import unidecode
 import emoji
+import demoji
+
+from .tokenizer_contractions import CONTRACTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +66,7 @@ def drop_multiple_spaces(func):
     return wrapper
 
 
+# Functions
 def standardize_text(text):
     # Escape HTML symbols
     text = html.unescape(text)
@@ -97,7 +102,7 @@ def replace_mentions(text, filler='@user'):
     username_regex = re.compile(r'(?:(?<=^)|(?<=[^@\w]))@(\w{1,15})\b')
     # Replace other user handles with the filler
     # Added space to separate the mention from non-space characters behind
-    text = re.sub(username_regex, f' {filler}', text)
+    text = re.sub(username_regex, f' {filler} ', text)
     return text
 
 
@@ -109,11 +114,13 @@ def replace_urls(text, filler='<url>'):
     as https://t.co/randomnum).
     The regex doesn't account for what's behind.
     """
-    url_regex = re.compile(
-        r'((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))')
+    # url_regex = re.compile(
+    #     r'((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))')
+    twitter_url_regex = re.compile(
+        r'https://t.co/[A-Za-z0-9]+')
     # Replace other urls by filler
     # Added space to separate the mention from non-space characters behind
-    text = re.sub(url_regex, f' {filler}', text)
+    text = re.sub(twitter_url_regex, f' {filler} ', text)
     return text
 
 
@@ -125,7 +132,7 @@ def replace_emails(text, filler='@email'):
     # Replace other user handles by filler
     text = re.sub(email_regex, filler, text)
     # Add spaces between, and remove double spaces again
-    text = text.replace(filler, f' {filler}')
+    text = text.replace(filler, f' {filler} ')
     return text
 
 
@@ -183,10 +190,11 @@ def normalize(text):
 
 
 def remove_emoji(text):
-    """Replaces symbols-other (So) Unicode characters with whitespaces.
-    Potentially induces duplicate whitespaces.
-    """
-    text = ''.join(' ' if unicodedata.category(c) == 'So' else c for c in text)
+    # """Replaces symbols-other (So) Unicode characters with whitespaces.
+    # Potentially induces duplicate whitespaces.
+    # """
+    # text = ''.join(' ' if unicodedata.category(c) == 'So' else c for c in text)
+    text = demoji.replace(text, ' ')
     return text
 
 
@@ -196,8 +204,28 @@ def asciify_emoji(text):
     """
     text = emoji.demojize(text)
     # Pad with whitespace
-    text = re.sub(r":(\w+):", r" :\1: ", text)
+    text = re.sub(r":([\w-]+):", r" :\1: ", text)
     return text
+
+
+def expand_contractions(text):
+    contractions_pattern = re.compile(
+        '({})'.format('|'.join(CONTRACTIONS.keys())),
+        flags=re.IGNORECASE | re.DOTALL)
+
+    def expand_match(contraction):
+        match = contraction.group(0)
+        first_char = match[0]
+        expanded_contraction = \
+            CONTRACTIONS.get(match) \
+            if CONTRACTIONS.get(match) \
+            else CONTRACTIONS.get(match.lower())
+        expanded_contraction = first_char+expanded_contraction[1:]
+        return expanded_contraction
+
+    expanded_text = contractions_pattern.sub(expand_match, text)
+    expanded_text = re.sub("'", "", expanded_text)
+    return expanded_text
 
 
 def tokenize(text):

@@ -1,0 +1,320 @@
+{
+    "created_at": "Mon Nov 16 10:39:45 +0000 2020",
+    "id": 1328286627765117000,
+    "id_str": "1328286627765116929",
+    "full_text": "COVID-19 is a historic human event, unfolding during a historic time from a communication perspective (social media).\n\nThese findings show that while scientists initially got an over-proportional amount of the attention, it shifted rapidly to more national &amp; polarized groups. 👇 https://t.co/eQQ5gokU6G",
+    "truncated": false,
+    "display_text_range": [
+        0,
+        282
+    ],
+    "entities": {
+        "hashtags": [],
+        "symbols": [],
+        "user_mentions": [],
+        "urls": [
+            {
+                "url": "https://t.co/eQQ5gokU6G",
+                "expanded_url": "https://twitter.com/marmuel_/status/1328281820107055104",
+                "display_url": "twitter.com/marmuel_/statu…",
+                "indices": [
+                    283,
+                    306
+                ]
+            }
+        ]
+    },
+    "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+    "in_reply_to_status_id": null,
+    "in_reply_to_status_id_str": null,
+    "in_reply_to_user_id": null,
+    "in_reply_to_user_id_str": null,
+    "in_reply_to_screen_name": null,
+    "user": {
+        "id": 14177696,
+        "id_str": "14177696",
+        "name": "Marcel Salathé",
+        "screen_name": "marcelsalathe",
+        "location": "🇨🇭",
+        "description": "Private account. Many hats: Prof @EPFL_en, Acad. Dir. EPFL Extension School @epfl_exts, co-founder @AIcrowdHQ, co-organizer @appliedMLdays, YC alumnus",
+        "url": "https://t.co/Ff9riFnzKa",
+        "entities": {
+            "url": {
+                "urls": [
+                    {
+                        "url": "https://t.co/Ff9riFnzKa",
+                        "expanded_url": "http://blog.salathe.com",
+                        "display_url": "blog.salathe.com",
+                        "indices": [
+                            0,
+                            23
+                        ]
+                    }
+                ]
+            },
+            "description": {
+                "urls": []
+            }
+        },
+        "protected": false,
+        "followers_count": 18066,
+        "friends_count": 1137,
+        "listed_count": 685,
+        "created_at": "Wed Mar 19 16:19:03 +0000 2008",
+        "favourites_count": 4007,
+        "utc_offset": null,
+        "time_zone": null,
+        "geo_enabled": true,
+        "verified": true,
+        "statuses_count": 134,
+        "lang": null,
+        "contributors_enabled": false,
+        "is_translator": false,
+        "is_translation_enabled": false,
+        "profile_background_color": "C0DEED",
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "profile_background_tile": false,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/1212770152158318592/VNNrEKqy_normal.jpg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1212770152158318592/VNNrEKqy_normal.jpg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/14177696/1577981913",
+        "profile_image_extensions_alt_text": null,
+        "profile_banner_extensions_alt_text": null,
+        "profile_link_color": "144066",
+        "profile_sidebar_border_color": "C0DEED",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "profile_text_color": "333333",
+        "profile_use_background_image": true,
+        "has_extended_profile": false,
+        "default_profile": false,
+        "default_profile_image": false,
+        "following": false,
+        "follow_request_sent": false,
+        "notifications": false,
+        "translator_type": "none"
+    },
+    "geo": null,
+    "coordinates": null,
+    "place": null,
+    "contributors": null,
+    "is_quote_status": true,
+    "quoted_status_id": 1328281820107055000,
+    "quoted_status_id_str": "1328281820107055104",
+    "quoted_status_permalink": {
+        "url": "https://t.co/eQQ5gokU6G",
+        "expanded": "https://twitter.com/marmuel_/status/1328281820107055104",
+        "display": "twitter.com/marmuel_/statu…"
+    },
+    "quoted_status": {
+        "created_at": "Mon Nov 16 10:20:38 +0000 2020",
+        "id": 1328281820107055000,
+        "id_str": "1328281820107055104",
+        "full_text": "\"International expert communities on Twitter become more isolated during the COVID-19 pandemic\"\n\n🔗 https://t.co/gpO88ggL6q\n\nhas just been published on arxiv! 🎉 A big network study based on 350M tweets with @FraDurazzi @DanielRemondin1 and @marcelsalathe \n\nA 🧵: 👇 https://t.co/JHK8Rg6YNB",
+        "truncated": false,
+        "display_text_range": [
+            0,
+            262
+        ],
+        "entities": {
+            "hashtags": [],
+            "symbols": [],
+            "user_mentions": [
+                {
+                    "screen_name": "FraDurazzi",
+                    "name": "Francesco Durazzi",
+                    "id": 42676172,
+                    "id_str": "42676172",
+                    "indices": [
+                        206,
+                        217
+                    ]
+                },
+                {
+                    "screen_name": "DanielRemondin1",
+                    "name": "Daniel Remondini",
+                    "id": 1036304237666492400,
+                    "id_str": "1036304237666492416",
+                    "indices": [
+                        218,
+                        234
+                    ]
+                },
+                {
+                    "screen_name": "marcelsalathe",
+                    "name": "Marcel Salathé",
+                    "id": 14177696,
+                    "id_str": "14177696",
+                    "indices": [
+                        239,
+                        253
+                    ]
+                }
+            ],
+            "urls": [
+                {
+                    "url": "https://t.co/gpO88ggL6q",
+                    "expanded_url": "https://arxiv.org/pdf/2011.06845.pdf",
+                    "display_url": "arxiv.org/pdf/2011.06845…",
+                    "indices": [
+                        99,
+                        122
+                    ]
+                }
+            ],
+            "media": [
+                {
+                    "id": 1328267786079117300,
+                    "id_str": "1328267786079117312",
+                    "indices": [
+                        263,
+                        286
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/Em70g5PXIAALKOZ.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/Em70g5PXIAALKOZ.jpg",
+                    "url": "https://t.co/JHK8Rg6YNB",
+                    "display_url": "pic.twitter.com/JHK8Rg6YNB",
+                    "expanded_url": "https://twitter.com/marmuel_/status/1328281820107055104/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "small": {
+                            "w": 680,
+                            "h": 418,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 1200,
+                            "h": 737,
+                            "resize": "fit"
+                        },
+                        "large": {
+                            "w": 1214,
+                            "h": 746,
+                            "resize": "fit"
+                        }
+                    }
+                }
+            ]
+        },
+        "extended_entities": {
+            "media": [
+                {
+                    "id": 1328267786079117300,
+                    "id_str": "1328267786079117312",
+                    "indices": [
+                        263,
+                        286
+                    ],
+                    "media_url": "http://pbs.twimg.com/media/Em70g5PXIAALKOZ.jpg",
+                    "media_url_https": "https://pbs.twimg.com/media/Em70g5PXIAALKOZ.jpg",
+                    "url": "https://t.co/JHK8Rg6YNB",
+                    "display_url": "pic.twitter.com/JHK8Rg6YNB",
+                    "expanded_url": "https://twitter.com/marmuel_/status/1328281820107055104/photo/1",
+                    "type": "photo",
+                    "sizes": {
+                        "thumb": {
+                            "w": 150,
+                            "h": 150,
+                            "resize": "crop"
+                        },
+                        "small": {
+                            "w": 680,
+                            "h": 418,
+                            "resize": "fit"
+                        },
+                        "medium": {
+                            "w": 1200,
+                            "h": 737,
+                            "resize": "fit"
+                        },
+                        "large": {
+                            "w": 1214,
+                            "h": 746,
+                            "resize": "fit"
+                        }
+                    },
+                    "ext_alt_text": null
+                }
+            ]
+        },
+        "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+        "in_reply_to_status_id": null,
+        "in_reply_to_status_id_str": null,
+        "in_reply_to_user_id": null,
+        "in_reply_to_user_id_str": null,
+        "in_reply_to_screen_name": null,
+        "user": {
+            "id": 743827585566654500,
+            "id_str": "743827585566654464",
+            "name": "Martin Müller",
+            "screen_name": "marmuel_",
+            "location": "Geneva, Switzerland",
+            "description": "PhD student @EPFL, working on NLP/sentiment analysis for Health & Epidemiology",
+            "url": null,
+            "entities": {
+                "description": {
+                    "urls": []
+                }
+            },
+            "protected": false,
+            "followers_count": 221,
+            "friends_count": 387,
+            "listed_count": 5,
+            "created_at": "Fri Jun 17 15:28:10 +0000 2016",
+            "favourites_count": 941,
+            "utc_offset": null,
+            "time_zone": null,
+            "geo_enabled": false,
+            "verified": false,
+            "statuses_count": 219,
+            "lang": null,
+            "contributors_enabled": false,
+            "is_translator": false,
+            "is_translation_enabled": false,
+            "profile_background_color": "F5F8FA",
+            "profile_background_image_url": null,
+            "profile_background_image_url_https": null,
+            "profile_background_tile": false,
+            "profile_image_url": "http://pbs.twimg.com/profile_images/752599765813256192/mNC4SSFx_normal.jpg",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/752599765813256192/mNC4SSFx_normal.jpg",
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/743827585566654464/1530192901",
+            "profile_image_extensions_alt_text": null,
+            "profile_banner_extensions_alt_text": null,
+            "profile_link_color": "1DA1F2",
+            "profile_sidebar_border_color": "C0DEED",
+            "profile_sidebar_fill_color": "DDEEF6",
+            "profile_text_color": "333333",
+            "profile_use_background_image": true,
+            "has_extended_profile": true,
+            "default_profile": true,
+            "default_profile_image": false,
+            "following": false,
+            "follow_request_sent": false,
+            "notifications": false,
+            "translator_type": "none"
+        },
+        "geo": null,
+        "coordinates": null,
+        "place": null,
+        "contributors": null,
+        "is_quote_status": false,
+        "retweet_count": 28,
+        "favorite_count": 83,
+        "favorited": false,
+        "retweeted": false,
+        "possibly_sensitive": false,
+        "possibly_sensitive_appealable": false,
+        "lang": "en"
+    },
+    "retweet_count": 43,
+    "favorite_count": 111,
+    "favorited": false,
+    "retweeted": false,
+    "possibly_sensitive": false,
+    "possibly_sensitive_appealable": false,
+    "lang": "en"
+}

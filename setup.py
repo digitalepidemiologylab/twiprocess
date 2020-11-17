@@ -13,7 +13,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     # Updated for fasttext model
     install_requires=[
-        'pandas', 'shapely', 'unidecode', 'emoji'],
+        'pandas', 'shapely', 'unidecode', 'emoji', 'demoji'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
