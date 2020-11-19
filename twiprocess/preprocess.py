@@ -75,6 +75,7 @@ def preprocess(text,
                lower_case=False,
                asciify=False,
                remove_punctuation=False,
+               standardize_punctuation=False,
                asciify_emoji=False,
                remove_emoji=False,
                replace_url_with=None,
@@ -113,6 +114,8 @@ def preprocess(text,
     # Remove punctuation
     if remove_punctuation:
         text = atomic.remove_punctuation(text)
+    if standardize_punctuation:
+        text = atomic.standardize_punctuation(text)
     # Remove emoji
     if remove_emoji:
         text = atomic.remove_emoji(text)

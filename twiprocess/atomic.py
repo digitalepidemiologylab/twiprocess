@@ -53,7 +53,8 @@ def check_empty_nonstr(func):
             return ''
         if not isinstance(text, str):
             text = str(text)
-        func(text, **kwargs)
+        text = func(text, **kwargs)
+        return text
 
     return wrapper
 
@@ -118,7 +119,8 @@ def replace_urls(text, filler='<url>'):
     # url_regex = re.compile(
     #     r'((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))')
     twitter_url_regex = re.compile(
-        r'https://t.co/[A-Za-z0-9]+')
+        # r'https?://t.co/[A-Za-z0-9]+')
+        r'https?://t.co(?:/[0-9a-zA-Z]+)?')
     # Replace other urls by filler
     # Added space to separate the mention from non-space characters behind
     text = re.sub(twitter_url_regex, f' {filler} ', text)
