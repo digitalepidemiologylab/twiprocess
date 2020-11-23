@@ -9,6 +9,7 @@ https://en.wikipedia.org/wiki/Unicode_character_property.
 
 import logging
 import re
+import os
 import html
 import unicodedata
 import ast
@@ -21,6 +22,7 @@ from .tokenizer_contractions import CONTRACTIONS
 
 logger = logging.getLogger(__name__)
 demoji.DIRECTORY = '/tmp/.demoji'
+demoji.CACHEPATH = os.path.join(demoji.DIRECTORY, "codes.json")
 demoji.download_codes()
 
 try:
