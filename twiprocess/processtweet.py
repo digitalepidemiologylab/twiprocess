@@ -237,9 +237,11 @@ class ProcessTweet(Tweet):
         urls_unwound = [
             url.get('unwound', {}).get('url', '') for url in tweet.urls]
         urls_expanded = [url.get('expanded_url', '') for url in tweet.urls]
-        urls_media = [
-            medium.get('expanded_url', '')
-            for medium in tweet.extended_tweet.media]
+        urls_media = []
+        if tweet.extended_tweet.media:
+            urls_media = [
+                medium.get('expanded_url', '')
+                for medium in tweet.extended_tweet.media]
         return ' '.join(urls_unwound + urls_expanded + urls_media)
 
     @property

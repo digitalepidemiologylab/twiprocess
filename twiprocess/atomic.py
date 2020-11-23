@@ -20,6 +20,7 @@ import demoji
 from .tokenizer_contractions import CONTRACTIONS
 
 logger = logging.getLogger(__name__)
+demoji.DIRECTORY = '/tmp/.demoji'
 demoji.download_codes()
 
 try:

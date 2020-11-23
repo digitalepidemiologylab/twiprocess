@@ -200,8 +200,7 @@ class Tweet:
     @property
     @lru_cache(maxsize=1)
     def text(self):
-        if self.retweet_or_tweet.extended_tweet != \
-                ExtendedTweet(None, self):
+        if self.retweet_or_tweet.extended_tweet._status != {}:
             return self.standardize_func(
                 self.retweet_or_tweet.extended_tweet.full_text)
         return self.standardize_func(self.retweet_or_tweet._status.get('text'))
