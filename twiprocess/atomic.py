@@ -32,6 +32,7 @@ except ImportError:
         "Could not import 'spacy'. "
         "'twiprocess.text.tokenize' will not work.")
 
+nlp = lambda x: x
 try:
     nlp = spacy.load('en_core_web_sm')
 except OSError:
