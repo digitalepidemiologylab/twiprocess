@@ -131,7 +131,7 @@ def preprocess(text,
         text = text.replace('@email', replace_email_with)
     # Remove potentially induced duplicate whitespaces
     text = ' '.join(text.split())
-    if min_num_tokens > 0 or lemmatize or remove_stop_words:
+    if (min_num_tokens > 0 or lemmatize or remove_stop_words) and atomic.nlp:
         tokens = atomic.tokenize(text)
         # Ignore everything below min_num_tokens
         if min_num_tokens > 0:
