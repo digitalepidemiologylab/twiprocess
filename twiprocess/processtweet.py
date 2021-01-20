@@ -7,8 +7,8 @@ A Class for Tweet Preprocessing
 import logging
 from collections import defaultdict
 from functools import lru_cache
+from dateutil.parser import parse
 
-# from pandas import to_datetime
 import shapely.geometry
 
 from .tweet import Tweet
@@ -36,12 +36,8 @@ except NameError:
 class ProcessTweet(Tweet):
     """Wrapper class for processing functions."""
 
-    def extract(self, to_datetime, extract_media=False, extract_geo=False):
-        """Extracts the relevant info from an S3 tweet.
-
-        In order to make twiprocess independent of pandas,
-        in takes ``to_datetime`` as an argument.
-        """
+    def extract(self, extract_media=False, extract_geo=False):
+        """Extracts the relevant info from an S3 tweet."""
         geo_obj = self.add_region_info(self.geo_info) if extract_geo else {}
         media = self.media_info if extract_media else {}
         return {
@@ -53,7 +49,7 @@ class ProcessTweet(Tweet):
             'quoted_status_id': self.quoted_status.id,
             'retweeted_user_id': self.retweeted_status.user.id,
             'retweeted_status_id': self.retweeted_status.id,
-            'created_at': to_datetime(self.created_at).isoformat(),
+            'created_at': parse(self.created_at).isoformat(),
             'entities.user_mentions': self.user_mentions_ids,
             'user.id': self.user.id,
             'user.screen_name': self.user.screen_name,
@@ -63,7 +59,7 @@ class ProcessTweet(Tweet):
             'user.location': self.user.location,
             'user.num_followers': self.user.followers_count,
             'user.num_following': self.user.friends_count,
-            'user.created_at': to_datetime(self.user.created_at).isoformat(),
+            'user.created_at': parse(self.user.created_at).isoformat(),
             'user.statuses_count': self.user.statuses_count,
             'user.is_verified': self.user.verified,
             'lang': self.lang,
