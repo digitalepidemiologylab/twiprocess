@@ -128,6 +128,7 @@ class ProcessTweet(Tweet):
                 - latitude (float)
                 - country_code (str)
                 - location_type (str)
+                - geocode (str)
         """
         def get_country_code_by_coords(longitude, latitude):
             if self.map_data:
@@ -157,7 +158,8 @@ class ProcessTweet(Tweet):
             'longitude': None,
             'latitude': None,
             'country_code': None,
-            'location_type': None
+            'location_type': None,
+            'geocode': False
         }
 
         if self.coordinates:
@@ -213,6 +215,7 @@ class ProcessTweet(Tweet):
                         geo_obj['longitude'], geo_obj['latitude'])
                 geo_obj['country_code'] = country_code
                 geo_obj['geo_type'] = 3
+                geo_obj['geocode'] = True
 
         return geo_obj
 
