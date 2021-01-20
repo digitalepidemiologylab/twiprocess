@@ -104,23 +104,22 @@ class User:
 
     @property
     def time_zone(self):
+        # 19.01.2021 Deprecated
         # Backward compatiibility, now (30.10.2020) time_zone
         if 'timezone' in self._user:
             return self._user['timezone']
         return self._user.get('time_zone')
+
+    @property
+    def lang(self):
+        # 19.01.2021 Deprecated
+        return self._user.get('lang')
 
 
 class ExtendedTweet:
     def __init__(self, status, parent):
         self._status = status if status else {}
         self.parent = parent
-
-    # def __eq__(self, other):
-    #     if not isinstance(other, ExtendedTweet):
-    #         return False
-    #     status_eq = self._status == other._status
-    #     parent_eq = self.parent == other.parent
-    #     return status_eq and parent_eq
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -140,6 +139,30 @@ class ExtendedTweet:
         return self._status.get('extended_entities', {}).get('media')
 
 
+class Place:
+    def __init__(self, status, parent):
+        self._status = status if status else {}
+        self.parent = parent
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __hash__(self):
+        return hash(self.__dict__.values())
+
+    @property
+    def coordinates(self):
+        return self._status.get('bounding_box', {}).get('coordinates')
+
+    @property
+    def country_code(self):
+        return self._status.get('country_code')
+
+    @property
+    def place_type(self):
+        return self._status.get('place_type')
+
+
 def standardize_func_default(text):
     return text
 
@@ -152,8 +175,8 @@ class Tweet:
             status,
             standardize_func=None,
             keywords=None,  # Legacy
-            map_data=None,  # localgeocode
-            geo_code=None   # localgeocode
+            map_data=None,  # local-geocode
+            geo_code=None   # local-geocode
     ):
         self._status = status if status else {}
         self.keywords = keywords if keywords else []
@@ -163,23 +186,20 @@ class Tweet:
         self.map_data = map_data
         self.geo_code = geo_code
 
-    # def __eq__(self, other):
-    #     if not isinstance(other, Tweet) or not issubclass(type(other), Tweet):
-    #         return False
-    #     status_eq = self._status == other._status
-    #     keywords_eq = self.keywords == other.keywords
-    #     standardize_eq = self.standardize_func == other.standardize_func
-    #     map_data_eq = self.map_data == other.map_data
-    #     geo_code_eq = self.geo_code == other.geo_code
-    #     return (
-    #         status_eq and keywords_eq and standardize_eq
-    #         and map_data_eq and geo_code_eq)
-
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
     def __hash__(self):
         return hash(self.__dict__.values())
+
+    # Streamer info
+    @property
+    def project(self):
+        return self._status.get('project')
+
+    @property
+    def matching_keywords(self):
+        return self._status.get('matching_keywords')
 
     # ID
     @property
@@ -214,6 +234,11 @@ class Tweet:
         return tweet
 
     # Entities
+    @property
+    def hashtags(self):
+        hashtags = self._status.get('entities', {}).get('hashtags', [])
+        return [h['text'] for h in hashtags]
+
     @property
     def user_mentions(self):
         return self._status.get('entities', {}).get('user_mentions', [])
@@ -252,6 +277,10 @@ class Tweet:
     def retweeted_status(self):
         return type(self)(self._status.get('retweeted_status'))
 
+    @property
+    def retweet_count(self):
+        return self._status.get('retweet_count')
+
     # Quote
     @property
     def has_quote(self):
@@ -283,13 +312,8 @@ class Tweet:
         return self._status.get('coordinates', {}).get('coordinates')
 
     @property
-    def place_coordinates(self):
-        return self._status.get(
-            'place', {}).get('bounding_box', {}).get('coordinates')
-
-    @property
-    def place_country_code(self):
-        return self._status.get('place', {}).get('country_code')
+    def place(self):
+        return self._status.get('place')
 
     @property
     def lang(self):

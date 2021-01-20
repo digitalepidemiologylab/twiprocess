@@ -8,7 +8,7 @@ import logging
 from collections import defaultdict
 from functools import lru_cache
 
-from pandas import to_datetime
+# from pandas import to_datetime
 import shapely.geometry
 
 from .tweet import Tweet
@@ -36,8 +36,13 @@ except NameError:
 class ProcessTweet(Tweet):
     """Wrapper class for processing functions."""
 
-    def extract(self, extract_media=False, extract_geo=False):
-        geo_obj = self.geo_info if extract_geo else {}
+    def extract(self, to_datetime, extract_media=False, extract_geo=False):
+        """Extracts the relevant info from an S3 tweet.
+
+        In order to make twiprocess independent of pandas,
+        in takes ``to_datetime`` as an argument.
+        """
+        geo_obj = self.add_region_info(self.geo_info) if extract_geo else {}
         media = self.media_info if extract_media else {}
         return {
             'id': self.id,
@@ -73,6 +78,36 @@ class ProcessTweet(Tweet):
             **media
         }
 
+    def extract_es(self, extract_geo=False):
+        geo_obj = self.geo_info if extract_geo else {}
+        geo_obj['coordinates'] = {
+            'lat': geo_obj.pop('latitude'),
+            'lon': geo_obj.pop('longitude')
+        }
+
+        return {
+            'created_at': self.created_at,
+            'id': self.id,
+            'text': self.text,
+            'in_reply_to_status_id': self.replied_status_id,
+            'in_reply_to_user_id': self.replied_user_id,
+            'user': {
+                'id': self.user.id,
+                'name': self.user.name,
+                'screen_name': self.user.screen_name,
+                'location': self.user.location,
+                'description': self.user.description
+            },
+            'geo_info': geo_obj,
+            'hashtags': self.hashtags,
+            'has_quote': self.has_quote,
+            'is_retweet': self.is_retweet,
+            'retweet_count': self.retweet_count,
+            'lang': self.lang,
+            'project': self.project,
+            'matching_keywords': self.matching_keywords
+        }
+
     @property
     def user_mentions_ids(self):
         """Doesn't get mentions from ``retweeted_status``es
@@ -92,12 +127,106 @@ class ProcessTweet(Tweet):
         (ProcessTweet object).
         Returns:
             geo_obj (dict): A dictionary with the following keys:
+                - geo_type (int)
                 - longitude (float)
                 - latitude (float)
                 - country_code (str)
+                - location_type (str)
+        """
+        def get_country_code_by_coords(longitude, latitude):
+            if self.map_data:
+                coordinates = shapely.geometry.point.Point(longitude, latitude)
+                within = self.map_data.geometry.apply(coordinates.within)
+                if sum(within) > 0:
+                    return self.map_data[within].iloc[0].ISO_A2
+                else:
+                    dist = self.map_data.geometry.apply(
+                        lambda poly: poly.distance(coordinates))
+                    closest_country = self.map_data.iloc[dist.argmin()].ISO_A2
+                    logger.warning(
+                        f'Coordinates {longitude}, {latitude} were outside of '
+                        'a country land area but were matched to '
+                        f'closest country ({closest_country})')
+                    return closest_country
+            else:
+                return None
+
+        def convert_to_polygon(s):
+            for i, _s in enumerate(s):
+                s[i] = [float(_s[0]), float(_s[1])]
+            return shapely.geometry.Polygon(s)
+
+        geo_obj = {
+            'geo_type': 0,
+            'longitude': None,
+            'latitude': None,
+            'country_code': None,
+            'location_type': None
+        }
+
+        if self.coordinates:
+            # Try to get geo data from coordinates (<0.1% of tweets)
+            geo_obj['longitude'], geo_obj['latitude'] = self.coordinates[0:2]
+            # For the newer tweets, if there's a coordinates field,
+            # there's also a place field
+            country_code = self.place.country_code
+            if country_code and country_code == '':
+                # Sometimes places don't contain country codes,
+                # try to resolve from coordinates
+                country_code = get_country_code_by_coords(
+                    geo_obj['longitude'], geo_obj['latitude'])
+            geo_obj['country_code'] = country_code
+            geo_obj['location_type'] = self.place.place_type
+            geo_obj['geo_type'] = 1
+        elif self.place.coordinates:
+            # Try to get geo data from place (roughly 1% of tweets)
+            # Why does convert_to_polygon take only
+            # the first two coordinates? ->
+            # It's not the first two coordinates, it's the bounding box,
+            # it's for some reason wrapped into another layer of brackets
+            # [[[a, b], [c, d], [e, f], [g, h]]]
+            polygon = convert_to_polygon(self.place.coordinates[0])
+            geo_obj['longitude'] = polygon.centroid.x
+            geo_obj['latitude'] = polygon.centroid.y
+            country_code = self.place.country_code
+            if country_code and country_code == '':
+                # Sometimes places don't contain country codes,
+                # try to resolve from coordinates
+                country_code = get_country_code_by_coords(
+                    geo_obj['longitude'], geo_obj['latitude'])
+            geo_obj['country_code'] = country_code
+            geo_obj['location_type'] = self.place.place_type
+            geo_obj['geo_type'] = 2
+        else:
+            if self.geo_code is None:
+                logger.warning(
+                    'Not possible to retrieve geo info from '
+                    "user location without 'geo_code'")
+                return geo_obj
+            # Try to parse user location
+            locations = self.geo_code.decode(self.user.location)
+            # Why len() > 0? -> Because that's the output of self.geo_code
+            if len(locations) > 0:
+                geo_obj['longitude'] = locations[0]['longitude']
+                geo_obj['latitude'] = locations[0]['latitude']
+                country_code = locations[0]['country_code']
+                if country_code == '':
+                    # Sometimes country code is missing (e.g. disputed areas),
+                    # try to resolve from geodata
+                    country_code = get_country_code_by_coords(
+                        geo_obj['longitude'], geo_obj['latitude'])
+                geo_obj['country_code'] = country_code
+                geo_obj['geo_type'] = 3
+
+        return geo_obj
+
+    def add_region_info(self, geo_obj):
+        """Adds region info to 'geo_obj'.
+
+        Returns:
+            geo_obj (dict): A dictionary with added keys:
                 - region (str)
                 - subregion (str)
-                - geo_type (int)
 
         Regions (according to World Bank):
         East Asia & Pacific, Latin America & Caribbean, Europe & Central Asia,
@@ -115,93 +244,27 @@ class ProcessTweet(Tweet):
         """
         def get_region_by_country_code(country_code):
             return self.map_data[
-                self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB
+                self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB \
+                if self.map_data else None
 
         def get_subregion_by_country_code(country_code):
             return self.map_data[
-                self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION
-
-        def get_country_code_by_coords(longitude, latitude):
-            coordinates = shapely.geometry.point.Point(longitude, latitude)
-            within = self.map_data.geometry.apply(coordinates.within)
-            if sum(within) > 0:
-                return self.map_data[within].iloc[0].ISO_A2
-            else:
-                dist = self.map_data.geometry.apply(
-                    lambda poly: poly.distance(coordinates))
-                closest_country = self.map_data.iloc[dist.argmin()].ISO_A2
-                logger.warning(
-                    f'Coordinates {longitude}, {latitude} were outside of '
-                    'a country land area but were matched to '
-                    f'closest country ({closest_country})')
-                return closest_country
-
-        def convert_to_polygon(s):
-            for i, _s in enumerate(s):
-                s[i] = [float(_s[0]), float(_s[1])]
-            return shapely.geometry.Polygon(s)
-
-        geo_obj = {
-            'longitude': None,
-            'latitude': None,
-            'country_code': None,
-            'region': None,
-            'subregion': None,
-            'geo_type': 0
-        }
-
-        if self.coordinates:
-            # Try to get geo data from coordinates (<0.1% of tweets)
-            geo_obj['longitude'], geo_obj['latitude'] = self.coordinates[0:2]
-            geo_obj['country_code'] = get_country_code_by_coords(
-                geo_obj['longitude'], geo_obj['latitude'])
-            geo_obj['geo_type'] = 1
-        elif self.place_coordinates:
-            # Try to get geo data from place (roughly 1% of tweets)
-            # Why does convert_to_polygon take only
-            # the first two coordinates? ->
-            # It's not the first two coordinates, it's the bounding box,
-            # it's for some reason wrapped into another layer of brackets
-            # [[[a, b], [c, d], [e, f], [g, h]]]
-            polygon = convert_to_polygon(self.place_coordinates[0])
-            geo_obj['longitude'] = polygon.centroid.x
-            geo_obj['latitude'] = polygon.centroid.y
-            country_code = self.place_country_code
-            if country_code and country_code == '':
-                # Sometimes places don't contain country codes,
-                # try to resolve from coordinates
-                country_code = get_country_code_by_coords(
-                    geo_obj['longitude'], geo_obj['latitude'])
-            geo_obj['country_code'] = country_code
-            geo_obj['geo_type'] = 2
-        else:
-            if self.geo_code is None:
-                return geo_obj
-            # Try to parse user location
-            locations = self.geo_code.decode(self.user.location)
-            # Why len() > 0? -> Because that's the output of self.geo_code
-            if len(locations) > 0:
-                geo_obj['longitude'] = locations[0]['longitude']
-                geo_obj['latitude'] = locations[0]['latitude']
-                country_code = locations[0]['country_code']
-                if country_code == '' and self.map_data:
-                    # Sometimes country code is missing (e.g. disputed areas),
-                    # try to resolve from geodata
-                    country_code = get_country_code_by_coords(
-                        geo_obj['longitude'], geo_obj['latitude'])
-                geo_obj['country_code'] = country_code
-                geo_obj['geo_type'] = 3
+                self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION \
+                if self.map_data else None
 
         if geo_obj['country_code'] and self.map_data:
             # Retrieve region info
-            if geo_obj['country_code'] in self.map_data.ISO_A2.tolist():
+            try:
                 geo_obj['region'] = get_region_by_country_code(
                     geo_obj['country_code'])
                 geo_obj['subregion'] = get_subregion_by_country_code(
                     geo_obj['country_code'])
-            else:
+            except IndexError:
+                # self.map_data[self.map_data['ISO_A2'] == country_code].iloc[0]
+                # is invalid
                 logger.warning(
-                    f'Unknown country_code {geo_obj["country_code"]}')
+                    'Unknown country_code %s', geo_obj['country_code'])
+
         return geo_obj
 
     @property

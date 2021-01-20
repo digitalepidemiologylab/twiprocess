@@ -33,14 +33,14 @@ except ImportError:
         "'twiprocess.text.tokenize' will not work.")
 
 nlp = None
-try:
-    nlp = spacy.load('en_core_web_sm')
-except OSError:
-    logger.warning(
-        "Could not import 'en_core_web_sm'. "
-        "'twiprocess.text.tokenize' will not work.")
-except NameError:
-    pass
+# try:
+#     nlp = spacy.load('en_core_web_sm')
+# except OSError:
+#     logger.warning(
+#         "Could not import 'en_core_web_sm'. "
+#         "'twiprocess.text.tokenize' will not work.")
+# except NameError:
+#     pass
 
 try:
     from bs4 import BeautifulSoup
