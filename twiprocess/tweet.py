@@ -309,11 +309,13 @@ class Tweet:
     # Location
     @property
     def coordinates(self):
-        return self._status.get('coordinates', {}).get('coordinates')
+        coordinates = self._status.get('coordinates', {})
+        return coordinates.get('coordinates') if coordinates else None
 
     @property
     def place(self):
-        return self._status.get('place')
+        return Place(
+            self._status.get('place'), parent=self)
 
     @property
     def lang(self):
