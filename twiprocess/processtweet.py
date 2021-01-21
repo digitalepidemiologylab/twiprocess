@@ -76,10 +76,13 @@ class ProcessTweet(Tweet):
 
     def extract_es(self, extract_geo=False):
         geo_obj = self.geo_info if extract_geo else {}
-        geo_obj['coordinates'] = {
-            'lat': geo_obj.pop('latitude'),
-            'lon': geo_obj.pop('longitude')
-        }
+        if not (geo_obj['latitude'] or geo_obj['longitude']):
+            geo_obj['coordinates'] = {
+                'lat': geo_obj.pop('latitude'),
+                'lon': geo_obj.pop('longitude')
+            }
+        else:
+            geo_obj['coordinates'] = None
 
         return {
             'created_at': self.created_at,
