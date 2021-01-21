@@ -76,7 +76,7 @@ class ProcessTweet(Tweet):
 
     def extract_es(self, extract_geo=False):
         geo_obj = self.geo_info if extract_geo else {}
-        if not (geo_obj['latitude'] or geo_obj['longitude']):
+        if geo_obj['latitude'] and geo_obj['longitude']:
             geo_obj['coordinates'] = {
                 'lat': geo_obj.pop('latitude'),
                 'lon': geo_obj.pop('longitude')
