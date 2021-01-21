@@ -204,7 +204,7 @@ class Tweet:
     # ID
     @property
     def id(self):
-        return self._status.get('id')
+        return self._status.get('id_str')
 
     # Created at
     @property
