@@ -212,6 +212,7 @@ class ProcessTweet(Tweet):
             if len(locations) > 0:
                 geo_obj['longitude'] = locations[0]['longitude']
                 geo_obj['latitude'] = locations[0]['latitude']
+                geo_obj['location_type'] = locations[0]['location_type']
                 country_code = locations[0]['country_code']
                 if country_code == '':
                     # Sometimes country code is missing (e.g. disputed areas),
