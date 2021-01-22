@@ -237,7 +237,7 @@ class Tweet:
     @property
     def hashtags(self):
         hashtags = self._status.get('entities', {}).get('hashtags', [])
-        return [h['text'] for h in hashtags]
+        return [{'text': h['text']} for h in hashtags]
 
     @property
     def user_mentions(self):
