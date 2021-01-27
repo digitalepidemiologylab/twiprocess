@@ -199,7 +199,7 @@ class Tweet:
 
     @property
     def matching_keywords(self):
-        return self._status.get('matching_keywords')
+        return self._status.get('matching_keywords', [])
 
     # ID
     @property
@@ -237,7 +237,7 @@ class Tweet:
     @property
     def hashtags(self):
         hashtags = self._status.get('entities', {}).get('hashtags', [])
-        return [{'text': h['text']} for h in hashtags]
+        return [h['text'] for h in hashtags]
 
     @property
     def user_mentions(self):

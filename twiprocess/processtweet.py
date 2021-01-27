@@ -86,12 +86,13 @@ class ProcessTweet(Tweet):
             geo_obj.pop('latitude')
             geo_obj.pop('longitude')
 
-        return {
+        es_obj = {
             'created_at': self.created_at,
             'id': self.id,
             'text': self.text,
-            'in_reply_to_status_id': self.replied_status_id,
             'in_reply_to_user_id': self.replied_user_id,
+            'retweeted_user_id': self.retweeted_status.user.id,
+            'quoted_user_id': self.quoted_status.user.id,
             'user': {
                 'id': self.user.id,
                 'name': self.user.name,
@@ -100,14 +101,20 @@ class ProcessTweet(Tweet):
                 'description': self.user.description
             },
             'geo_info': geo_obj,
-            'hashtags': self.hashtags,
+            'hashtags': self.hashtags if self.hashtags != [] else None,
             'has_quote': self.has_quote,
             'is_retweet': self.is_retweet,
             'retweet_count': self.retweet_count,
             'lang': self.lang,
             'project': self.project,
-            'matching_keywords': self.matching_keywords
+            'matching_keywords':
+                self.matching_keywords
+                if self.matching_keywords != [] else None
         }
+
+        es_obj = {k: v for k, v in es_obj.items() if v is not None}
+
+        return es_obj
 
     @property
     def user_mentions_ids(self):
@@ -159,12 +166,11 @@ class ProcessTweet(Tweet):
             return shapely.geometry.Polygon(s)
 
         geo_obj = {
-            'geo_type': 0,
+            # 'geo_type': None,
             'longitude': None,
             'latitude': None,
-            'country_code': None,
-            'location_type': None,
-            'geocode': False
+            # 'country_code': None,
+            # 'location_type': None
         }
 
         if self.coordinates:
@@ -180,7 +186,7 @@ class ProcessTweet(Tweet):
                     geo_obj['longitude'], geo_obj['latitude'])
             geo_obj['country_code'] = country_code
             geo_obj['location_type'] = self.place.place_type
-            geo_obj['geo_type'] = 1
+            geo_obj['geo_type'] = 'tweet.coordinates'
         elif self.place.coordinates:
             # Try to get geo data from place (roughly 1% of tweets)
             # Why does convert_to_polygon take only
@@ -199,7 +205,7 @@ class ProcessTweet(Tweet):
                     geo_obj['longitude'], geo_obj['latitude'])
             geo_obj['country_code'] = country_code
             geo_obj['location_type'] = self.place.place_type
-            geo_obj['geo_type'] = 2
+            geo_obj['geo_type'] = 'tweet.place'
         else:
             if self.geo_code is None:
                 logger.warning(
@@ -220,8 +226,7 @@ class ProcessTweet(Tweet):
                     country_code = get_country_code_by_coords(
                         geo_obj['longitude'], geo_obj['latitude'])
                 geo_obj['country_code'] = country_code
-                geo_obj['geo_type'] = 3
-                geo_obj['geocode'] = True
+                geo_obj['geo_type'] = 'user.location'
 
         return geo_obj
 
