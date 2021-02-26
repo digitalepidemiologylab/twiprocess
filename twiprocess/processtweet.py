@@ -85,6 +85,15 @@ class ProcessTweet(Tweet):
         else:
             geo_obj = None
 
+        user = {
+            'id': self.user.id,
+            'name': self.user.name,
+            'screen_name': self.user.screen_name,
+            'location': self.user.location,
+            'description': self.user.description
+        }
+        user = {k: v for k, v in user.items() if v is not None}
+
         es_obj = {
             'created_at': parse(
                 self.created_at
@@ -94,13 +103,7 @@ class ProcessTweet(Tweet):
             'in_reply_to_user_id': self.replied_user_id,
             'retweeted_user_id': self.retweeted_status.user.id,
             'quoted_user_id': self.quoted_status.user.id,
-            'user': {
-                'id': self.user.id,
-                'name': self.user.name,
-                'screen_name': self.user.screen_name,
-                'location': self.user.location,
-                'description': self.user.description
-            },
+            'user': user,
             'geo_info': geo_obj,
             'hashtags': self.hashtags if self.hashtags != [] else None,
             'has_quote': self.has_quote,
