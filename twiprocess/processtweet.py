@@ -107,7 +107,6 @@ class ProcessTweet(Tweet):
             'hashtags': self.hashtags if self.hashtags != [] else None,
             'has_quote': self.has_quote,
             'is_retweet': self.is_retweet,
-            'retweet_count': self.retweet_count,
             'lang': self.lang,
             'project': self.project,
             'matching_keywords':
@@ -115,7 +114,9 @@ class ProcessTweet(Tweet):
                 if self.matching_keywords != [] else None
         }
 
-        es_obj = {k: v for k, v in es_obj.items() if v is not None}
+        es_obj = {
+            k: v for k, v in es_obj.items()
+            if v is not None and v is not False}
 
         return es_obj
 
