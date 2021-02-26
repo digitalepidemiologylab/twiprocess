@@ -83,9 +83,7 @@ class ProcessTweet(Tweet):
                 'lon': geo_obj.pop('longitude')
             }
         else:
-            geo_obj['coordinates'] = None
-            geo_obj.pop('latitude')
-            geo_obj.pop('longitude')
+            geo_obj = None
 
         es_obj = {
             'created_at': parse(
