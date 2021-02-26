@@ -7,6 +7,7 @@ A Class for Tweet Preprocessing
 import logging
 from collections import defaultdict
 from functools import lru_cache
+from datetime import timezone
 from dateutil.parser import parse
 
 import shapely.geometry
@@ -87,7 +88,9 @@ class ProcessTweet(Tweet):
             geo_obj.pop('longitude')
 
         es_obj = {
-            'created_at': self.created_at,
+            'created_at': parse(
+                self.created_at
+            ).astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.000Z'),
             'id': self.id,
             'text': self.text,
             'in_reply_to_user_id': self.replied_user_id,
