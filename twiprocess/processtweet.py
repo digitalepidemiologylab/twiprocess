@@ -148,11 +148,14 @@ class ProcessTweet(Tweet):
                 - geocode (str)
         """
         def get_country_code_by_coords(longitude, latitude):
+            def str_or_none(country_code):
+                return country_code if isinstance(country_code, str) else None
+
             if self.map_data:
                 coordinates = shapely.geometry.point.Point(longitude, latitude)
                 within = self.map_data.geometry.apply(coordinates.within)
                 if sum(within) > 0:
-                    return self.map_data[within].iloc[0].ISO_A2
+                    return str_or_none(self.map_data[within].iloc[0].ISO_A2)
                 else:
                     dist = self.map_data.geometry.apply(
                         lambda poly: poly.distance(coordinates))
@@ -161,7 +164,7 @@ class ProcessTweet(Tweet):
                         f'Coordinates {longitude}, {latitude} were outside of '
                         'a country land area but were matched to '
                         f'closest country ({closest_country})')
-                    return closest_country
+                    return str_or_none(closest_country)
             else:
                 return None
 
