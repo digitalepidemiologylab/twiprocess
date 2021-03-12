@@ -147,10 +147,10 @@ class ProcessTweet(Tweet):
                 - location_type (str)
                 - geocode (str)
         """
-        def get_country_code_by_coords(longitude, latitude):
-            def str_or_none(country_code):
-                return country_code if isinstance(country_code, str) else None
+        def str_or_none(country_code):
+            return country_code if isinstance(country_code, str) else None
 
+        def get_country_code_by_coords(longitude, latitude):
             if self.map_data:
                 coordinates = shapely.geometry.point.Point(longitude, latitude)
                 within = self.map_data.geometry.apply(coordinates.within)
@@ -227,8 +227,8 @@ class ProcessTweet(Tweet):
                 geo_obj['longitude'] = locations[0]['longitude']
                 geo_obj['latitude'] = locations[0]['latitude']
                 geo_obj['location_type'] = locations[0]['location_type']
-                country_code = locations[0]['country_code']
-                if country_code == '':
+                country_code = str_or_none(locations[0]['country_code'])
+                if country_code is None or country_code == '':
                     # Sometimes country code is missing (e.g. disputed areas),
                     # try to resolve from geodata
                     country_code = get_country_code_by_coords(
