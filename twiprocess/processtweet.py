@@ -233,6 +233,8 @@ class ProcessTweet(Tweet):
                 geo_obj['country_code'] = country_code
                 geo_obj['geo_type'] = 'user.location'
 
+        geo_obj = {k: v for k, v in geo_obj.items() if v is not None}
+
         return geo_obj
 
     def add_region_info(self, geo_obj):
