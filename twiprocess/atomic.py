@@ -16,14 +16,14 @@ import ast
 
 import unidecode
 import emoji
-import demoji
+# import demoji
 
 from .tokenizer_contractions import CONTRACTIONS
 
 logger = logging.getLogger(__name__)
-demoji.DIRECTORY = '/tmp/.demoji'
-demoji.CACHEPATH = os.path.join(demoji.DIRECTORY, "codes.json")
-demoji.download_codes()
+# demoji.DIRECTORY = '/tmp/.demoji'
+# demoji.CACHEPATH = os.path.join(demoji.DIRECTORY, "codes.json")
+# demoji.download_codes()
 
 try:
     import spacy
@@ -201,7 +201,8 @@ def remove_emoji(text):
     # Potentially induces duplicate whitespaces.
     # """
     # text = ''.join(' ' if unicodedata.category(c) == 'So' else c for c in text)
-    text = demoji.replace(text, ' ')
+    # text = demoji.replace(text, ' ')
+    emoji.get_emoji_regexp().sub(u' ', text)
     return text
 
 

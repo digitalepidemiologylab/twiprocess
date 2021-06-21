@@ -12,8 +12,9 @@ setuptools.setup(
     url="https://github.com/crowdbreaks/twiprocess",
     packages=setuptools.find_packages(),
     # Updated for fasttext model
+    # demoji
     install_requires=[
-        'shapely', 'unidecode', 'emoji', 'demoji'],
+        'shapely', 'unidecode', 'emoji'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
