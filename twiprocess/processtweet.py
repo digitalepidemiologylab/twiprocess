@@ -272,7 +272,7 @@ class ProcessTweet(Tweet):
                 self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION \
                 if self.map_data is not None else None
 
-        if geo_obj.get('country_code') and self.map_data:
+        if geo_obj.get('country_code') and self.map_data is not None:
             # Retrieve region info
             try:
                 geo_obj['region'] = get_region_by_country_code(
