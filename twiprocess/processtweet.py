@@ -151,7 +151,7 @@ class ProcessTweet(Tweet):
             return country_code if isinstance(country_code, str) else None
 
         def get_country_code_by_coords(longitude, latitude):
-            if self.map_data:
+            if self.map_data is not None:
                 coordinates = shapely.geometry.point.Point(longitude, latitude)
                 within = self.map_data.geometry.apply(coordinates.within)
                 if sum(within) > 0:
@@ -265,12 +265,12 @@ class ProcessTweet(Tweet):
         def get_region_by_country_code(country_code):
             return self.map_data[
                 self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB \
-                if self.map_data else None
+                if self.map_data is not None else None
 
         def get_subregion_by_country_code(country_code):
             return self.map_data[
                 self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION \
-                if self.map_data else None
+                if self.map_data is not None else None
 
         if geo_obj.get('country_code') and self.map_data:
             # Retrieve region info
