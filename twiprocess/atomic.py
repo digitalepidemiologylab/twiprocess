@@ -44,6 +44,10 @@ nlp = None
 
 try:
     from bs4 import BeautifulSoup
+    from bs4 import MarkupResemblesLocatorWarning
+    ignored_warning = MarkupResemblesLocatorWarning
+    import warnings
+    warnings.filterwarnings("ignore", category=ignored_warning, module='bs4')
 except ImportError:
     logger.warning(
         "Could not import 'BeautifulSoup' from 'bs4'."
