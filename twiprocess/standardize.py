@@ -48,14 +48,3 @@ def standardize_anonymize_html(text):
     # Anonymize
     text = anonymize_text(text)
     return text
-
-@check_empty_nonstr
-@drop_multiple_spaces
-def separate_standardize_anonymize(text):
-    # Separate hashtags
-    text = separate_hashtags(text)
-    # Standardize text
-    text = standardize_text(text)
-    # Anonymize
-    text = anonymize_text(text)
-    return text

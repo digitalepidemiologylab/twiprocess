@@ -151,22 +151,21 @@ class ProcessTweet(Tweet):
             return country_code if isinstance(country_code, str) else None
 
         def get_country_code_by_coords(longitude, latitude):
-            if self.map_data is not None:
-                coordinates = shapely.geometry.point.Point(longitude, latitude)
-                within = self.map_data.geometry.apply(coordinates.within)
-                if sum(within) > 0:
-                    return str_or_none(self.map_data[within].iloc[0].ISO_A2)
-                else:
-                    dist = self.map_data.geometry.apply(
-                        lambda poly: poly.distance(coordinates))
-                    closest_country = self.map_data.iloc[dist.argmin()].ISO_A2
-                    logger.warning(
-                        f'Coordinates {longitude}, {latitude} were outside of '
-                        'a country land area but were matched to '
-                        f'closest country ({closest_country})')
-                    return str_or_none(closest_country)
+            if self.map_data is None: return None
+
+            coordinates = shapely.geometry.point.Point(longitude, latitude)
+            within = self.map_data.geometry.apply(coordinates.within)
+            if sum(within) > 0:
+                return str_or_none(self.map_data[within].iloc[0].ISO_A2)
             else:
-                return None
+                dist = self.map_data.geometry.apply(
+                    lambda poly: poly.distance(coordinates))
+                closest_country = self.map_data.iloc[dist.argmin()].ISO_A2
+                logger.warning(
+                    f'Coordinates {longitude}, {latitude} were outside of '
+                    'a country land area but were matched to '
+                    f'closest country ({closest_country})')
+                return str_or_none(closest_country)
 
         def convert_to_polygon(s):
             for i, _s in enumerate(s):
@@ -264,13 +263,11 @@ class ProcessTweet(Tweet):
         """
         def get_region_by_country_code(country_code):
             return self.map_data[
-                self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB \
-                if self.map_data is not None else None
+                self.map_data['ISO_A2'] == country_code].iloc[0].REGION_WB
 
         def get_subregion_by_country_code(country_code):
             return self.map_data[
-                self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION \
-                if self.map_data is not None else None
+                self.map_data['ISO_A2'] == country_code].iloc[0].SUBREGION
 
         if geo_obj.get('country_code') and self.map_data is not None:
             # Retrieve region info
