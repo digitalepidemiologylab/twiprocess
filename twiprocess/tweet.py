@@ -152,7 +152,12 @@ class Place:
 
     @property
     def coordinates(self):
-        return self._status.get('bounding_box', {}).get('coordinates')
+        bounding_box = self._status.get('bounding_box', {})
+        if not isinstance(bounding_box, dict):
+            print(self._status)
+            return {}
+        else:
+            return bounding_box.get('coordinates')
 
     @property
     def country_code(self):
