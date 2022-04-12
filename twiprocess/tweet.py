@@ -228,7 +228,11 @@ class Tweet:
         if self.retweet_or_tweet.extended_tweet._status != {}:
             return self.standardize_func(
                 self.retweet_or_tweet.extended_tweet.full_text)
-        return self.standardize_func(self.retweet_or_tweet._status.get('text'))
+        elif 'full_text' in self.retweet_or_tweet._status:
+            field = 'full_text'
+        else:
+            field = 'text'
+        return self.standardize_func(self.retweet_or_tweet._status.get(field))
 
     @property
     @lru_cache(maxsize=1)
@@ -290,7 +294,7 @@ class Tweet:
     @property
     def has_quote(self):
         # Used here and in parse_tweets.py
-        return 'quoted_status' in self._status
+        return 'quoted_status' in self._status and not self.is_retweet
 
     @property
     def quoted_status(self):
