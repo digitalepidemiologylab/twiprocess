@@ -162,12 +162,12 @@ def anonymize_text(text, url_filler='<url>',
 
 
 def remove_control_characters(text):
-    """Removes control (C*) Unicode characters."""
+    """Replaces control (C*) Unicode characters with white spaces."""
     if not isinstance(text, str):
         return text
     # Removes all other control characters and the NULL byte
     # (which causes issues when parsing with pandas)
-    return ''.join(ch for ch in text if unicodedata.category(ch)[0] != 'C')
+    return ''.join(ch if unicodedata.category(ch)[0] != 'C' else ' ' for ch in text)
 
 
 def asciify(text):
