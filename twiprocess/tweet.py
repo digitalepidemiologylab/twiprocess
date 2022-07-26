@@ -224,7 +224,18 @@ class Tweet:
     # Text
     @property
     @lru_cache(maxsize=1)
-    def text(self, standardize_func_name=None):
+    def text(self):
+        if self.retweet_or_tweet.extended_tweet._status != {}:
+            return self.standardize_func(
+                self.retweet_or_tweet.extended_tweet.full_text)
+        elif 'full_text' in self.retweet_or_tweet._status:
+            field = 'full_text'
+        else:
+            field = 'text'
+        return self.standardize_func(self.retweet_or_tweet._status.get(field))
+
+    @lru_cache(maxsize=1)
+    def parse_text(self, standardize_func_name=None):
         standardize_func = self.standardize_func
         if standardize_func_name != None:
             standardize_func = getattr(standardize, standardize_func_name)
