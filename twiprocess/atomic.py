@@ -77,11 +77,11 @@ def drop_multiple_spaces(func):
 
 
 # Functions
-def standardize_text(text):
+def standardize_text(text, whitespace=True):
     # Escape HTML symbols
     text = html.unescape(text)
     # Replace control characters by a whitespace
-    text = remove_control_characters(text)
+    text = remove_control_characters(text, whitespace=whitespace)
     # Normalize by compatibility
     text = normalize(text)
     return text

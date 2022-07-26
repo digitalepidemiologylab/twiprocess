@@ -38,6 +38,16 @@ def standardize_anonymize(text):
 
 @check_empty_nonstr
 @drop_multiple_spaces
+def standardize_anonymize_remove_cc(text):
+    # Standardize text
+    text = standardize_text(text, whitespace=False)
+    # Anonymize
+    text = anonymize_text(text)
+    return text
+
+
+@check_empty_nonstr
+@drop_multiple_spaces
 def standardize_anonymize_html(text):
     # Parse HTML emoji
     text = parse_html_emoji(text)
