@@ -173,7 +173,7 @@ def remove_control_characters(text, whitespace=True):
 
 
 def asciify(text):
-    """Asciify all unicode characters."""
+    """Asciify all unicode characters. Emojis get removed."""
     text = unidecode.unidecode(text)
     return text
 
@@ -198,7 +198,7 @@ def remove_punctuation(text):
 
 
 def normalize(text):
-    """Normalizes unicode strings by compatibilty (in composed form)."""
+    """Normalizes unicode strings by compatibility (in composed form)."""
     return unicodedata.normalize('NFKC', text)
 
 
@@ -218,7 +218,8 @@ def asciify_emoji(text):
     """
     text = emoji.demojize(text)
     # Pad with whitespace
-    text = re.sub(r":([\w-]+):", r" :\1: ", text)
+    # text = re.sub(r":([\w-]+):", r" :\1: ", text)
+    text = f" {text} "
     return text
 
 
@@ -257,3 +258,18 @@ def tokenize(text):
             except ValueError:
                 pass
     return [i for i in doc]
+
+
+def merge_multiple_fillers(text, filler):
+    """Merges multiple fillers into one + count.
+
+    Args:
+        filler (str): The filler word without spaces
+    """
+    def counts(match):
+        return match.strip(), match.count(filler)
+
+    matches = map(counts, re.findall(fr'((?:{filler}[ ]?)+)', text))
+    for match, count in matches:
+        text = re.sub(match, f'{count} {filler}', text)
+    return text
